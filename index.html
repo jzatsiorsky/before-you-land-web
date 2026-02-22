@@ -136,19 +136,85 @@
       max-width: 90%;
     }
 
-    audio {
+    .custom-player {
       width: 100%;
-      height: 48px;
-      border-radius: 12px;
-      outline: none;
+      background: var(--player-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.75rem;
+      box-shadow: var(--shadow-sm);
     }
 
-    audio::-webkit-media-controls-panel {
-      background-color: var(--player-bg);
+    .player-row-main {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 0.65rem;
     }
-    audio::-webkit-media-controls-current-time-display,
-    audio::-webkit-media-controls-time-remaining-display {
+
+    .player-btn {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--surface-color);
       color: var(--text-main);
+      min-height: 48px;
+      padding: 0.6rem 0.9rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .player-btn:hover {
+      transform: translateY(-1px);
+      border-color: #d8d2c2;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .player-btn:active {
+      transform: translateY(0);
+    }
+
+    .player-btn:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+
+    .player-btn-primary {
+      background: var(--text-main);
+      border-color: var(--text-main);
+      color: var(--surface-color);
+      font-size: 1rem;
+    }
+
+    .player-row-progress {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .time-label {
+      font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      min-width: 2.6rem;
+      text-align: center;
+    }
+
+    .seek-bar {
+      width: 100%;
+      height: 10px;
+      margin: 0;
+      accent-color: var(--accent-color);
+      cursor: pointer;
+    }
+
+    .audio-hidden {
+      display: none;
     }
 
     /* --- EPISODE LIST --- */
@@ -280,6 +346,19 @@
         gap: 1rem;
         padding: 1.5rem;
       }
+
+      .custom-player {
+        padding: 0.85rem;
+      }
+
+      .player-btn {
+        min-height: 54px;
+        font-size: 1rem;
+      }
+
+      .player-btn-primary {
+        font-size: 1.06rem;
+      }
       
       .tracklist-section {
         padding: 0 1.5rem 1.5rem;
@@ -309,7 +388,19 @@
         <h1 class="np-title" id="nowPlayingTitle">Select an episode</h1>
         <p class="np-desc" id="nowPlayingDesc">Pick from the tracklist below to begin playback and prepare for the journey.</p>
         
-        <audio id="audioPlayer" controls preload="metadata"></audio>
+        <div class="custom-player" aria-label="Audio player controls">
+          <div class="player-row-main">
+            <button id="rewindBtn" class="player-btn" type="button" aria-label="Rewind 15 seconds">-15s</button>
+            <button id="playPauseBtn" class="player-btn player-btn-primary" type="button" aria-label="Play episode">Play</button>
+            <button id="forwardBtn" class="player-btn" type="button" aria-label="Skip forward 30 seconds">+30s</button>
+          </div>
+          <div class="player-row-progress">
+            <span class="time-label" id="currentTime">0:00</span>
+            <input id="seekBar" class="seek-bar" type="range" min="0" max="0" value="0" step="0.1" aria-label="Seek through episode">
+            <span class="time-label" id="durationTime">0:00</span>
+          </div>
+        </div>
+        <audio id="audioPlayer" class="audio-hidden" preload="metadata"></audio>
       </div>
     </section>
 
@@ -344,11 +435,44 @@
     ];
 
     const audioPlayer = document.getElementById("audioPlayer");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const rewindBtn = document.getElementById("rewindBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const seekBar = document.getElementById("seekBar");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationTimeEl = document.getElementById("durationTime");
     const episodeList = document.getElementById("episodeList");
     const nowPlayingSubtitle = document.getElementById("nowPlayingSubtitle");
     const nowPlayingTitle = document.getElementById("nowPlayingTitle");
     const nowPlayingDesc = document.getElementById("nowPlayingDesc");
     const daysEl = document.getElementById("days");
+    let isScrubbing = false;
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+      const wholeSeconds = Math.floor(seconds);
+      const mins = Math.floor(wholeSeconds / 60);
+      const secs = wholeSeconds % 60;
+      return `${mins}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function syncProgressUI() {
+      const duration = Number.isFinite(audioPlayer.duration) ? audioPlayer.duration : 0;
+      const current = Number.isFinite(audioPlayer.currentTime) ? audioPlayer.currentTime : 0;
+
+      seekBar.max = String(duration);
+      if (!isScrubbing) {
+        seekBar.value = String(current);
+      }
+      currentTimeEl.textContent = formatTime(current);
+      durationTimeEl.textContent = formatTime(duration);
+    }
+
+    function updatePlayPauseLabel() {
+      const isPlaying = !audioPlayer.paused && !audioPlayer.ended;
+      playPauseBtn.textContent = isPlaying ? "Pause" : "Play";
+      playPauseBtn.setAttribute("aria-label", isPlaying ? "Pause episode" : "Play episode");
+    }
 
     // Countdown Logic
     function getNextMarchNineteenth() {
@@ -372,11 +496,14 @@
       if (!episode || episode.status !== "available") return;
 
       audioPlayer.src = episode.file;
+      audioPlayer.load();
       
       // Update subtitle to show episode number instead of generic text
       nowPlayingSubtitle.textContent = `Episode ${String(index + 1).padStart(2, '0')}`;
       nowPlayingTitle.textContent = episode.title;
       nowPlayingDesc.textContent = episode.description;
+      syncProgressUI();
+      updatePlayPauseLabel();
 
       const buttons = episodeList.querySelectorAll("button");
       buttons.forEach((btn, i) => {
@@ -390,9 +517,54 @@
       if (autoplay) {
         audioPlayer.play().catch(() => {
           console.log("Autoplay blocked by browser. User must interact.");
+          updatePlayPauseLabel();
         });
       }
     }
+
+    playPauseBtn.addEventListener("click", () => {
+      if (!audioPlayer.src) return;
+      if (audioPlayer.paused) {
+        audioPlayer.play().catch(() => {
+          console.log("Playback failed. User interaction may be required.");
+        });
+      } else {
+        audioPlayer.pause();
+      }
+    });
+
+    rewindBtn.addEventListener("click", () => {
+      audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 15);
+    });
+
+    forwardBtn.addEventListener("click", () => {
+      const duration = Number.isFinite(audioPlayer.duration) ? audioPlayer.duration : audioPlayer.currentTime + 30;
+      audioPlayer.currentTime = Math.min(duration, audioPlayer.currentTime + 30);
+    });
+
+    seekBar.addEventListener("pointerdown", () => {
+      isScrubbing = true;
+    });
+
+    seekBar.addEventListener("pointerup", () => {
+      isScrubbing = false;
+    });
+
+    seekBar.addEventListener("input", () => {
+      currentTimeEl.textContent = formatTime(Number(seekBar.value));
+    });
+
+    seekBar.addEventListener("change", () => {
+      audioPlayer.currentTime = Number(seekBar.value);
+      isScrubbing = false;
+    });
+
+    audioPlayer.addEventListener("loadedmetadata", syncProgressUI);
+    audioPlayer.addEventListener("timeupdate", syncProgressUI);
+    audioPlayer.addEventListener("durationchange", syncProgressUI);
+    audioPlayer.addEventListener("play", updatePlayPauseLabel);
+    audioPlayer.addEventListener("pause", updatePlayPauseLabel);
+    audioPlayer.addEventListener("ended", updatePlayPauseLabel);
 
     // Render Tracklist
     let hasRenderedUpcoming = false;
