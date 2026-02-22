@@ -228,9 +228,22 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
-      margin-bottom: 1rem;
+      margin-bottom: 0.25rem;
       padding-top: 2rem;
       border-top: 1px solid var(--border-color);
+    }
+
+    .episode-block-heading {
+      margin: 0.75rem 0 0.35rem;
+      padding: 0 0.15rem;
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .episode-block-heading:first-child {
+      margin-top: 0;
     }
 
     .episode-list {
@@ -273,7 +286,8 @@
     }
 
     .episode-btn.active .ep-num,
-    .episode-btn.active .ep-duration {
+    .episode-btn.active .ep-duration,
+    .episode-btn.active .ep-subheading {
       color: var(--text-faint);
     }
 
@@ -289,10 +303,20 @@
       color: var(--text-muted);
     }
 
+    .episode-btn:disabled .ep-subheading {
+      color: var(--text-faint);
+    }
+
     .ep-left {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 1.5rem;
+    }
+
+    .ep-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
     }
 
     .ep-num {
@@ -300,12 +324,19 @@
       font-weight: 600;
       color: var(--text-muted);
       font-variant-numeric: tabular-nums;
+      padding-top: 0.15rem;
     }
 
     .ep-title {
       font-size: 1.05rem;
       font-weight: 600;
       color: var(--text-main);
+    }
+
+    .ep-subheading {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.35;
     }
 
     .ep-duration {
@@ -414,22 +445,28 @@
     const episodes = [
       {
         status: "available",
+        block: "Block 1: The Land & Its Bones",
         file: "ep01_the_heel_of_the_boot.mp3",
         title: "The Heel of the Boot",
+        subheading: "Map, coastlines, and the light that shapes everything",
         duration: "6:26",
         description: "Understanding the land before you land. A quick orientation to Puglia's geography: the Gargano, Tavoliere, Murge, and Salento, plus why the Adriatic-Ionian position and intense southern light shaped three thousand years of movement, trade, and culture."
       },
       {
         status: "available",
+        block: "Block 1: The Land & Its Bones",
         file: "ep02_before_the_greeks_arrived.mp3",
         title: "Before the Greeks Arrived: A Messapian Speaks",
+        subheading: "The Messapian roots beneath modern Puglia",
         duration: "6:41",
         description: "Travel back before Magna Graecia to meet the Messapians through an imagined first-person voice grounded in archaeology: their language, cities, rituals, and the enduring idea of place they called 'logetium'."
       },
       {
         status: "upcoming",
+        block: "Block 1: The Land & Its Bones",
         releaseText: "Coming Soon",
         title: "Magna Graecia: When Puglia Was Greek",
+        subheading: "Taras rises: Greek power, wealth, and ideas",
         description: "The Greeks colonized Taranto (Taras) and made it one of the richest cities in the ancient world. Explore how Greek culture fused into the local soil — the temples, the pottery, the philosophy of Archytas of Tarentum, who Plato actually visited."
       },
     ];
@@ -569,9 +606,20 @@
     // Render Tracklist
     let hasRenderedUpcoming = false;
 
+    let renderedBlock = "";
+
     episodes.forEach((episode, index) => {
       // If we already rendered one locked episode, stop rendering any more.
       if (hasRenderedUpcoming) return;
+
+      const blockLabel = episode.block || "The Journey";
+      if (blockLabel !== renderedBlock) {
+        const blockItem = document.createElement("li");
+        blockItem.className = "episode-block-heading";
+        blockItem.textContent = blockLabel;
+        episodeList.appendChild(blockItem);
+        renderedBlock = blockLabel;
+      }
 
       const item = document.createElement("li");
       const button = document.createElement("button");
@@ -586,7 +634,10 @@
         button.innerHTML = `
           <div class="ep-left">
             <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
-            <span class="ep-title">${episode.title}</span>
+            <span class="ep-text">
+              <span class="ep-title">${episode.title}</span>
+              <span class="ep-subheading">${episode.subheading || ""}</span>
+            </span>
           </div>
           <span class="ep-upcoming-badge">${episode.releaseText}</span>
         `;
@@ -596,7 +647,10 @@
         button.innerHTML = `
           <div class="ep-left">
             <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
-            <span class="ep-title">${episode.title}</span>
+            <span class="ep-text">
+              <span class="ep-title">${episode.title}</span>
+              <span class="ep-subheading">${episode.subheading || ""}</span>
+            </span>
           </div>
           <span class="ep-duration">${episode.duration}</span>
         `;
