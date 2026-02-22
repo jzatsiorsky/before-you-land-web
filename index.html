@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puglia Travel Lounge</title>
+  <style>
+    :root {
+      --bg-color: #F7F5F0;
+      --surface-color: #FFFFFF;
+      --text-main: #2C3026;
+      --text-muted: #737865;
+      --text-faint: #A3A895;
+      --accent-color: #B85C38;
+      --border-color: #E6E2D6;
+      --player-bg: #F0ECE1;
+      --shadow-sm: 0 4px 12px rgba(44, 48, 38, 0.05);
+      --shadow-lg: 0 20px 40px rgba(44, 48, 38, 0.08);
+      
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      line-height: 1.5;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--surface-color);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- HEADER & COUNTDOWN --- */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--surface-color);
+    }
+
+    .app-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--text-main);
+    }
+
+    .countdown-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-color);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .countdown-badge strong {
+      color: var(--accent-color);
+      font-size: 1.1rem;
+    }
+
+    /* --- NOW PLAYING HERO --- */
+    .hero-section {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 2rem;
+      padding: 2.5rem;
+      background: linear-gradient(to bottom, #FFFFFF, var(--bg-color));
+    }
+
+    .cover-art {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      background-color: var(--border-color);
+    }
+
+    .now-playing-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-color);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .np-title {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .np-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      max-width: 90%;
+    }
+
+    audio {
+      width: 100%;
+      height: 48px;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    audio::-webkit-media-controls-panel {
+      background-color: var(--player-bg);
+    }
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+      color: var(--text-main);
+    }
+
+    /* --- EPISODE LIST --- */
+    .tracklist-section {
+      padding: 0 2.5rem 2.5rem;
+      background: var(--bg-color);
+    }
+
+    .tracklist-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .episode-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .episode-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    /* Hover and Active states for Available episodes */
+    .episode-btn:not(:disabled):hover {
+      border-color: #D1CDA8;
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .episode-btn.active {
+      background: var(--text-main);
+      border-color: var(--text-main);
+      color: var(--surface-color);
+    }
+
+    .episode-btn.active .ep-title {
+      color: var(--surface-color);
+    }
+
+    .episode-btn.active .ep-num,
+    .episode-btn.active .ep-duration {
+      color: var(--text-faint);
+    }
+
+    /* Disabled/Upcoming states */
+    .episode-btn:disabled {
+      cursor: not-allowed;
+      background: transparent;
+      border-style: dashed;
+      opacity: 0.7;
+    }
+
+    .episode-btn:disabled .ep-title {
+      color: var(--text-muted);
+    }
+
+    .ep-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .ep-num {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ep-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .ep-duration {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .ep-upcoming-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      background: var(--border-color);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .hero-section {
+        grid-template-columns: 1fr;
+        padding: 2rem 1.5rem;
+        text-align: center;
+      }
+      
+      .cover-art {
+        max-width: 240px;
+        margin: 0 auto;
+      }
+
+      .np-desc {
+        max-width: 100%;
+      }
+
+      .app-header {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.5rem;
+      }
+      
+      .tracklist-section {
+        padding: 0 1.5rem 1.5rem;
+      }
+
+      .ep-left {
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="app-container">
+    <header class="app-header">
+      <div class="app-title">Puglia Field Notes</div>
+      <div class="countdown-badge" aria-live="polite">
+        Departure in <strong id="days">00</strong> days
+      </div>
+    </header>
+
+    <section class="hero-section">
+      <img class="cover-art" src="cover.jpg" alt="Puglia landscape cover art" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'400\\\' height=\\\'400\\\'><rect width=\\\'400\\\' height=\\\'400\\\' fill=\\\'#E6E2D6\\\'/></svg>'">
+      
+      <div class="now-playing-info">
+        <div class="subtitle" id="nowPlayingSubtitle">Episode 01</div>
+        <h1 class="np-title" id="nowPlayingTitle">Select an episode</h1>
+        <p class="np-desc" id="nowPlayingDesc">Pick from the tracklist below to begin playback and prepare for the journey.</p>
+        
+        <audio id="audioPlayer" controls preload="metadata"></audio>
+      </div>
+    </section>
+
+    <section class="tracklist-section">
+      <div class="tracklist-title">The Journey</div>
+      <ol class="episode-list" id="episodeList"></ol>
+    </section>
+  </main>
+
+  <script>
+    const episodes = [
+      {
+        status: "available",
+        file: "ep01_the_heel_of_the_boot.mp3",
+        title: "The Heel of the Boot",
+        duration: "6:26",
+        description: "Understanding the land before you land. A quick orientation to Puglia's geography: the Gargano, Tavoliere, Murge, and Salento, plus why the Adriatic-Ionian position and intense southern light shaped three thousand years of movement, trade, and culture."
+      },
+      {
+        status: "available",
+        file: "ep02_before_the_greeks_arrived.mp3",
+        title: "Before the Greeks Arrived: A Messapian Speaks",
+        duration: "6:41",
+        description: "Travel back before Magna Graecia to meet the Messapians through an imagined first-person voice grounded in archaeology: their language, cities, rituals, and the enduring idea of place they called 'logetium'."
+      },
+      {
+        status: "upcoming",
+        releaseText: "Coming Soon",
+        title: "Magna Graecia: When Puglia Was Greek",
+        description: "The Greeks colonized Taranto (Taras) and made it one of the richest cities in the ancient world. Explore how Greek culture fused into the local soil — the temples, the pottery, the philosophy of Archytas of Tarentum, who Plato actually visited."
+      },
+    ];
+
+    const audioPlayer = document.getElementById("audioPlayer");
+    const episodeList = document.getElementById("episodeList");
+    const nowPlayingSubtitle = document.getElementById("nowPlayingSubtitle");
+    const nowPlayingTitle = document.getElementById("nowPlayingTitle");
+    const nowPlayingDesc = document.getElementById("nowPlayingDesc");
+    const daysEl = document.getElementById("days");
+
+    // Countdown Logic
+    function getNextMarchNineteenth() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const targetThisYear = new Date(year, 2, 19, 0, 0, 0, 0); 
+      return now <= targetThisYear ? targetThisYear : new Date(year + 1, 2, 19, 0, 0, 0, 0);
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const target = getNextMarchNineteenth();
+      const msLeft = target.getTime() - now.getTime();
+      const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+      daysEl.textContent = String(daysLeft).padStart(2, "0");
+    }
+
+    // Player Logic
+    function setActiveEpisode(index, autoplay = false) {
+      const episode = episodes[index];
+      if (!episode || episode.status !== "available") return;
+
+      audioPlayer.src = episode.file;
+      
+      // Update subtitle to show episode number instead of generic text
+      nowPlayingSubtitle.textContent = `Episode ${String(index + 1).padStart(2, '0')}`;
+      nowPlayingTitle.textContent = episode.title;
+      nowPlayingDesc.textContent = episode.description;
+
+      const buttons = episodeList.querySelectorAll("button");
+      buttons.forEach((btn, i) => {
+        if (!btn.disabled) {
+            const isActive = i === index;
+            btn.classList.toggle("active", isActive);
+            btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        }
+      });
+
+      if (autoplay) {
+        audioPlayer.play().catch(() => {
+          console.log("Autoplay blocked by browser. User must interact.");
+        });
+      }
+    }
+
+    // Render Tracklist
+    let hasRenderedUpcoming = false;
+
+    episodes.forEach((episode, index) => {
+      // If we already rendered one locked episode, stop rendering any more.
+      if (hasRenderedUpcoming) return;
+
+      const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "episode-btn";
+      
+      const isUpcoming = episode.status === "upcoming";
+      
+      if (isUpcoming) {
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+        button.innerHTML = `
+          <div class="ep-left">
+            <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
+            <span class="ep-title">${episode.title}</span>
+          </div>
+          <span class="ep-upcoming-badge">${episode.releaseText}</span>
+        `;
+        hasRenderedUpcoming = true; // Set flag to block subsequent upcoming episodes
+      } else {
+        button.setAttribute("aria-pressed", "false");
+        button.innerHTML = `
+          <div class="ep-left">
+            <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
+            <span class="ep-title">${episode.title}</span>
+          </div>
+          <span class="ep-duration">${episode.duration}</span>
+        `;
+        button.addEventListener("click", () => setActiveEpisode(index, true));
+      }
+
+      item.appendChild(button);
+      episodeList.appendChild(item);
+    });
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000 * 60 * 60); 
+    setActiveEpisode(0, false); 
+  </script>
+</body>
+</html>
