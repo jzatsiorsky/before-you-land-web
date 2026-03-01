@@ -632,13 +632,10 @@
     audioPlayer.addEventListener("ended", updatePlayPauseLabel);
 
     // Render Tracklist
-    let hasRenderedUpcoming = false;
-
     let renderedBlock = "";
 
-    episodes.forEach((episode, index) => {
-      // If we already rendered one locked episode, stop rendering any more.
-      if (hasRenderedUpcoming) return;
+    [...episodes].reverse().forEach((episode, reversedIndex) => {
+      const index = episodes.length - 1 - reversedIndex;
 
       const blockLabel = episode.block || "The Journey";
       if (blockLabel !== renderedBlock) {
@@ -669,7 +666,6 @@
           </div>
           <span class="ep-upcoming-badge">${episode.releaseText}</span>
         `;
-        hasRenderedUpcoming = true; // Set flag to block subsequent upcoming episodes
       } else {
         button.setAttribute("aria-pressed", "false");
         button.innerHTML = `
