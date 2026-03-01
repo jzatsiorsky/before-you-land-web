@@ -637,6 +637,8 @@
     [...episodes].reverse().forEach((episode, reversedIndex) => {
       const index = episodes.length - 1 - reversedIndex;
 
+      if (episode.status === "upcoming") return;
+
       const blockLabel = episode.block || "The Journey";
       if (blockLabel !== renderedBlock) {
         const blockItem = document.createElement("li");
@@ -650,44 +652,27 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "episode-btn";
-      
-      const isUpcoming = episode.status === "upcoming";
-      
-      if (isUpcoming) {
-        button.disabled = true;
-        button.setAttribute("aria-disabled", "true");
-        button.innerHTML = `
-          <div class="ep-left">
-            <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
-            <span class="ep-text">
-              <span class="ep-title">${episode.title}</span>
-              <span class="ep-subheading">${episode.subheading || ""}</span>
-            </span>
-          </div>
-          <span class="ep-upcoming-badge">${episode.releaseText}</span>
-        `;
-      } else {
-        button.setAttribute("aria-pressed", "false");
-        button.innerHTML = `
-          <div class="ep-left">
-            <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
-            <span class="ep-text">
-              <span class="ep-title">${episode.title}</span>
-              <span class="ep-subheading">${episode.subheading || ""}</span>
-            </span>
-          </div>
-          <span class="ep-duration">${episode.duration}</span>
-        `;
-        button.addEventListener("click", () => setActiveEpisode(index, true));
-      }
+      button.setAttribute("aria-pressed", "false");
+      button.innerHTML = `
+        <div class="ep-left">
+          <span class="ep-num">${String(index + 1).padStart(2, '0')}</span>
+          <span class="ep-text">
+            <span class="ep-title">${episode.title}</span>
+            <span class="ep-subheading">${episode.subheading || ""}</span>
+          </span>
+        </div>
+        <span class="ep-duration">${episode.duration}</span>
+      `;
+      button.addEventListener("click", () => setActiveEpisode(index, true));
 
       item.appendChild(button);
       episodeList.appendChild(item);
     });
 
     updateCountdown();
-    setInterval(updateCountdown, 1000 * 60 * 60); 
-    setActiveEpisode(0, false); 
+    setInterval(updateCountdown, 1000 * 60 * 60);
+    const firstInFeed = [...episodes].reverse().find(e => e.status === "available");
+    setActiveEpisode(episodes.indexOf(firstInFeed), false);
   </script>
 </body>
 </html>
