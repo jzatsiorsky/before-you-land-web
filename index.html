@@ -571,9 +571,9 @@
       updatePlayPauseLabel();
 
       const buttons = episodeList.querySelectorAll("button");
-      buttons.forEach((btn, i) => {
+      buttons.forEach((btn) => {
         if (!btn.disabled) {
-            const isActive = i === index;
+            const isActive = Number(btn.dataset.index) === index;
             btn.classList.toggle("active", isActive);
             btn.setAttribute("aria-pressed", isActive ? "true" : "false");
         }
@@ -652,6 +652,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "episode-btn";
+      button.dataset.index = index;
       button.setAttribute("aria-pressed", "false");
       button.innerHTML = `
         <div class="ep-left">
